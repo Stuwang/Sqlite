@@ -9,25 +9,25 @@ Transaction::Transaction(Connection* conn)
 	, is_open_(false) {
 }
 
-Transaction~Transaction() {
+Transaction::~Transaction() {
 	if (is_open_) {
 		connection_->RollbackTransaction();
 	}
 }
 
-bool TransactionBegin() {
+bool Transaction::Begin() {
 	DCHECK(!is_open_);
 	is_open_ = connection_->BeginTransaction();
 	return is_open_;
 }
 
-bool TransactionCommit() {
+bool Transaction::Commit() {
 	DCHECK(is_open_);
 	is_open_ = connection_->CommitTransaction();
 	return !is_open_;
 }
 
-void TransactionRollback() {
+void Transaction::Rollback() {
 	DCHECK(is_open_);
 	connection_->RollbackTransaction();
 	is_open_ = false;

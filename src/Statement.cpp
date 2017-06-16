@@ -1,12 +1,15 @@
+#include <cstring>
+
 #include "Statement.h"
 #include "Connection.h"
+
 
 namespace sql {
 
 StatementRef::StatementRef(Connection* conn,
                            sqlite3_stmt* stmt)
     : stmt_(stmt)
-    , connection_(connection)
+    , connection_(conn)
 {
     if (connection_) {
         connection_->StatementRefCreate(this);
@@ -34,14 +37,14 @@ StatementRef::~StatementRef() {
 Statement::Statement()
     : ref_()
     , steped_(false)
-    , succedded_(false)
+    , successed_(false)
 {
 }
 
-explicit Statement::Statement(StatementRef *ref)
+Statement::Statement(StatementRef *ref)
     : ref_(ref)
     , steped_(false)
-    , succedded_(false)
+    , successed_(false)
 {
 }
 
@@ -68,8 +71,8 @@ void Statement::Reset(bool clear_bound_args) {
 
     }
 
-    succeeded_ = false;
-    stepped_ = false;
+    successed_ = false;
+    steped_ = false;
 }
 
 ColType Statement::ColumnType(int col) const {
@@ -85,15 +88,15 @@ ColType Statement::DeclaredColumnType(int col) const {
         ;
 
     if (column_type == "integer")
-        return COLUMN_TYPE_INTEGER;
+        return ColType::COLUMN_TYPE_INTEGER;
     else if (column_type == "float")
-        return COLUMN_TYPE_FLOAT;
+        return ColType::COLUMN_TYPE_FLOAT;
     else if (column_type == "text")
-        return COLUMN_TYPE_TEXT;
+        return ColType::COLUMN_TYPE_TEXT;
     else if (column_type == "blob")
-        return COLUMN_TYPE_BLOB;
+        return ColType::COLUMN_TYPE_BLOB;
 
-    return COLUMN_TYPE_NULL;
+    return ColType::COLUMN_TYPE_NULL;
 }
 
 // bind values, 0 base index
@@ -196,10 +199,10 @@ bool Statement::ColumnBlobAsString(int col, std::string* o_res) const {
     DCHECK(is_valid());
     const void *p = reinterpret_cast<const char*>(ColumnBlob(col));
     int size = ColumnByteLength(col);
-    o_res->resize(len);
-    if ( p && size && o_res->size() != len)
+    o_res->resize(size);
+    if ( p && size && o_res->size() != size)
         return false;
-    o_res->assign(reinterpret_cast<const char*>(p), szie);
+    o_res->assign(reinterpret_cast<const char*>(p), size);
     return true;
 }
 
@@ -209,7 +212,7 @@ bool Statement::ColumnBlobAsVector(int col, std::vector<char>* o_res) const {
     int size = ColumnByteLength(col);
     if (p && size > 0) {
         o_res->resize(size);
-        memcpy(&(*o_res)[0], p, len);
+        memcpy(&(*o_res)[0], p, size);
     }
     return true;
 }
@@ -220,16 +223,16 @@ bool Statement::ColumnBlobAsVector(
                col, reinterpret_cast<std::vector<char>*>(o_res));
 }
 
-int Statement::CheckStepError(int error) {
-    succeeded_ = (err == SQLITE_OK ||
+int Statement::CheckStepError(int err) {
+    successed_ = (err == SQLITE_OK ||
                   err == SQLITE_ROW ||
                   err == SQLITE_DONE);
     steped_ = true;
 
-    if (!succeeded_ && ref_.get() && ref_->connection() ) {
+    if (!successed_ && ref_.get() && ref_->connection() ) {
         // should report error to connection
     }
-    return error;
+    return err;
 };
 
 bool Statement::CheckBindOk(int error) const {

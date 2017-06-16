@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include "sql_define.h"
 
 namespace sql {
 
@@ -60,7 +61,7 @@ public:
 
 	bool DoesViewExist(const char* view) const ;
 
-	bool DoesColumnExist(const char* table,const char* column) const;
+	bool DoesColumnExist(const char* table, const char* column) const;
 
 	int GetLastError() const ;
 
@@ -72,7 +73,7 @@ private:
 	friend class StatementRef;
 
 	bool OpenInternal(const char* file_name);
-	bool DoesItemExist(const char* name,const char* item) const;
+	bool DoesItemExist(const char* name, const char* item) const;
 
 	void StatementRefCreate(StatementRef* ref);
 	void StatementRefDelete(StatementRef* ref);
@@ -80,7 +81,7 @@ private:
 	sqlite3 *db_;
 	bool in_memory_;
 
-	typedef std::map<StatementId,StatementRef*> CachedStatementMap;
+	typedef std::map<StatementId, StatementRef*> CachedStatementMap;
 	CachedStatementMap statement_cahce_;
 
 	typedef std::set<StatementRef*> OpendStatementSet;

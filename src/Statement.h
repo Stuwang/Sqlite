@@ -17,7 +17,7 @@ enum class ColType {
 	COLUMN_TYPE_TEXT = SQLITE_TEXT,
 	COLUMN_TYPE_BLOB = SQLITE_BLOB,
 	COLUMN_TYPE_NULL = SQLITE_NULL,
-}
+};
 
 class StatementRef {
 public:

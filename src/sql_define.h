@@ -2,6 +2,7 @@
 #define SQL_SQL_DEFINE_H__
 
 #include "../sqlite/include/sqlite3.h"
+#include <cassert>
 
 #define DISABLE_COPY(Class)\
 	Class(const Class&) = delete;
@@ -15,15 +16,18 @@
 
 template<int N, class T>
 char (&_arraySizeHelper(T(&)[N]))[N];
-define arraysize(arr) (sizeof(_arraySizeHelper(arr)))
+#define arraysize(arr) (sizeof(_arraySizeHelper(arr)))
 
-#if _DEBUG
+#if 0
 #define DCHECK(expression)\
 do{									\
 	if(!(expression)){				\
 		assert(false,#expression);	\
 	}								\
 } while (false);
-#endif
+#else
+#define DCHECK(expression)
+#endif // 
+
 
 #endif //SQL_SQL_DEFINE_H__

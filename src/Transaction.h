@@ -1,6 +1,8 @@
 #ifndef SQL_TRANSACTION_H__
 #define SQL_TRANSACTION_H__
 
+#include "sql_define.h"
+
 namespace sql {
 
 class Connection;
@@ -15,9 +17,9 @@ public:
 
 	bool Commit();
 
-	void Rollback()
+	void Rollback();
 
-	bool is_open() const { return is_open_;}
+	bool is_open() const { return is_open_;};
 private:
 	Connection* connection_;
 	bool is_open_;
