@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "sql_define.h"
 
@@ -10,67 +11,92 @@ namespace sql {
 
 class Connection;
 
-class StatementRef{
-	public:
-		StatementRef(Connection* conn,sqlite3_stmt* stmt);
-		~StatementRef();
-		bool is_valid() const { return !!stmt_;};
+enum class ColType {
+	COLUMN_TYPE_INTEGER = SQLITE_INTEGER,
+	COLUMN_TYPE_FLOAT = SQLITE_FLOAT,
+	COLUMN_TYPE_TEXT = SQLITE_TEXT,
+	COLUMN_TYPE_BLOB = SQLITE_BLOB,
+	COLUMN_TYPE_NULL = SQLITE_NULL,
+}
 
-		Connection* connection() const {return connection_; };
-		sqlite3_stmt* stmt()const { return stmt_;};
+class StatementRef {
+public:
+	StatementRef(Connection* conn, sqlite3_stmt* stmt);
+	~StatementRef();
+	bool is_valid() const { return !!stmt_;};
 
-		void Close();
-	private:
-		sqlite3_stmt* stmt_;
-		Connection * connection_;
+	Connection* connection() const {return connection_; };
+	sqlite3_stmt* stmt()const { return stmt_;};
 
-		DISABLE_ASSIGN(StatementRef);
+	void Close();
+private:
+	sqlite3_stmt* stmt_;
+	Connection * connection_;
+
+	DISABLE_COPY_AND_ASSIGN(StatementRef);
 };
 
-class Statement{
-	public:
-		Statement();
-		explicit Statement(StatementRef *ref);
+class Statement {
+public:
+	Statement();
+	explicit Statement(StatementRef *ref);
 
-		void Clear();
+	void Clear();
 
-		bool is_valid() const { return statement_->is_valid() ;}
+	bool is_valid() const { return ref_->is_valid() ;}
 
-		bool Run();
+	bool Successed() const { return successed_;};
 
-		bool Step();
+	bool Run();
 
-		bool Reset(bool clear bound_args);
+	bool Step();
 
-		// bind values, 0 base index
-		bool BindNull(int col);
-		bool BindBool(int col,bool value);
-		bool BindInt(int col,int value);
-		bool BindInt64(int col,int64_t value);
-		bool BindDouble(int col,double value);
-		bool BindCString(int col,const char* value);
-		bool BindString(int col,const std::string& value);
-		bool BindBlob(int col,const void * blob,int size);
+	void Reset(bool clear_bound_args);
 
-		// get column count
-		int ColumnCount() const ;
+	ColType ColumnType(int col) const ;
+	ColType DeclaredColumnType(int col) const ;
 
-		// get value , 0 base index
-		bool	ColumnBool(int col)const;
-		int		ColumnInt(int col) const ;
-		int64_t ColumnInt64(int col) const ;
-		double	ColumnDouble(int col) const ;
-		std::string	ColumnString(int col) const ;
+	// bind values, 0 base index
+	bool BindNull(int col);
+	bool BindBool(int col, bool value);
+	bool BindInt(int col, int value);
+	bool BindInt64(int col, int64_t value);
+	bool BindDouble(int col, double value);
+	bool BindCString(int col, const char* value);
+	bool BindString(int col, const std::string& value);
+	bool BindBlob(int col, const void * blob, int size);
 
-		// blobs
-		const void* ColumnBlob(int col) const ;
-		int		ColumnByteLength(int col) const;
-		bool	ColumnBlobAsString(int col,std::string* o_res) const ;
-		bool	ColumnBlobAsVector(int col,std::vector<char>* o_res) const ;
-		bool	ColumnBlobAsVector(int col,std::vector<unsigned char>* o_res) const ;
+	// get column count
+	int ColumnCount() const ;
 
-	public:
-		StatementRef* statement_;
+	// get value , 0 base index
+	bool	ColumnBool(int col)const;
+	int		ColumnInt(int col) const ;
+	int64_t ColumnInt64(int col) const ;
+	double	ColumnDouble(int col) const ;
+	std::string	ColumnString(int col) const ;
+
+	// blobs
+	const void* ColumnBlob(int col) const ;
+	int		ColumnByteLength(int col) const;
+	bool	ColumnBlobAsString(int col, std::string* o_res) const ;
+	bool	ColumnBlobAsVector(int col, std::vector<char>* o_res) const ;
+	bool	ColumnBlobAsVector(int col,
+	                           std::vector<unsigned char>* o_res) const ;
+
+private:
+
+	// use for step and run
+	int CheckStepError(int error) ;
+
+	// use for bind
+	bool CheckBindOk(int error) const ;
+
+	std::unique_ptr<StatementRef> ref_;
+	bool steped_;
+	bool successed_;
+
+	DISABLE_COPY_AND_ASSIGN(Statement);
 };
 
 }
