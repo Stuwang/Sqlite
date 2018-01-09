@@ -53,6 +53,7 @@ public:
 	bool HasCachedStatement(const StatementId& id) const;
 
 	// get statement
+	
 
 
 	bool DoesTableExist(const char* table) const ;
@@ -66,7 +67,6 @@ public:
 	int GetLastError() const ;
 
 	const char* GetErrorMessage(int error) const ;
-
 
 private:
 

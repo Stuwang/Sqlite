@@ -22,7 +22,7 @@ enum class ColType {
 class StatementRef {
 public:
 	StatementRef(Connection* conn, sqlite3_stmt* stmt);
-	~StatementRef();
+	
 	bool is_valid() const { return !!stmt_;};
 
 	Connection* connection() const {return connection_; };
@@ -30,6 +30,10 @@ public:
 
 	void Close();
 private:
+	~StatementRef();
+	friend class std::shared_ptr<StatementRef>;
+
+
 	sqlite3_stmt* stmt_;
 	Connection * connection_;
 
@@ -92,7 +96,7 @@ private:
 	// use for bind
 	bool CheckBindOk(int error) const ;
 
-	std::unique_ptr<StatementRef> ref_;
+	std::shared_ptr<StatementRef> ref_;
 	bool steped_;
 	bool successed_;
 
