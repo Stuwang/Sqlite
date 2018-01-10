@@ -10,7 +10,7 @@ class Connection;
 class Transaction
 {
 public:
-	Transaction(Connection* conn);
+	explicit Transaction(Connection* conn);
 	~Transaction();
 
 	bool Begin();

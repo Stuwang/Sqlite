@@ -1,7 +1,7 @@
 #ifndef SQL_SQL_DEFINE_H__
 #define SQL_SQL_DEFINE_H__
 
-#include "../sqlite/include/sqlite3.h"
+#include "sqlite3.h"
 #include <cassert>
 
 #define DISABLE_COPY(Class)\

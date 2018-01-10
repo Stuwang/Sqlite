@@ -1,21 +1,22 @@
-SET(CMAKE_CXX_COMPILER "clang++")
-message(STATUS "COMPILER:clang++")
 
 # CMake 最低版本号要求
 cmake_minimum_required (VERSION 2.8)
 
+# SET(CMAKE_CXX_COMPILER "clang++")
+# message(STATUS "COMPILER:clang++")
+
 # if(CMAKE_COMPILER_IS_GNUCXX)
-add_compile_options(-std=c++11)
-message(STATUS "optional:-std=c++11")
+# add_compile_options(-std=c++11)
+# message(STATUS "optional:-std=c++11")
 
-add_compile_options(-Werror -Wall)
-message(STATUS "optional:-Werror -Wall")
+# add_compile_options(-Werror -Wall)
+# message(STATUS "optional:-Werror -Wall")
 
-add_compile_options(-o2)
-message(STATUS "optional:-o2")
+# add_compile_options(-o2)
+# message(STATUS "optional:-o2")
 
-add_compile_options(-pthread)
-message(STATUS "optional:-pthread")
+# add_compile_options(-pthread)
+# message(STATUS "optional:-pthread")
 
 # message(STATUS "CMAKE_BINARY_DIR")
 # message(STATUS "${CMAKE_BINARY_DIR}")
@@ -41,8 +42,33 @@ message(STATUS "optional:-pthread")
 # 项目信息
 project (sql)
 
-aux_source_directory(src SRCS)
+set(SQLITE3_SRCS
 
-add_library (test STATIC ${SRCS})
+# sqlite3/shell.c
+sqlite3/sqlite3.c
+sqlite3/sqlite3.h
+sqlite3/sqlite3ext.h
+	)
+
+set(SRCS
+
+src/Connection.cpp
+src/Connection.h
+src/sql_define.h
+src/Statement.cpp
+src/Statement.h
+src/Transaction.cpp
+src/Transaction.h
+)
+
+include_directories(sqlite3)
+include_directories(src)
+
+add_library(sqlite3 STATIC ${SQLITE3_SRCS})
+
+add_library (sql STATIC ${SRCS})
+
+add_executable(run test/main.cpp)
+target_link_libraries(run sqlite3 sql)
 
 

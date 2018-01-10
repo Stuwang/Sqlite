@@ -19,37 +19,39 @@ enum class ColType {
 	COLUMN_TYPE_NULL = SQLITE_NULL,
 };
 
-class StatementRef {
+class StatementImpl{
 public:
-	StatementRef(Connection* conn, sqlite3_stmt* stmt);
-	
-	bool is_valid() const { return !!stmt_;};
+	StatementImpl(Connection* conn, sqlite3_stmt* stmt);
 
-	Connection* connection() const {return connection_; };
-	sqlite3_stmt* stmt()const { return stmt_;};
+	bool is_valid() const { return !!stmt_; };
+
+	Connection* connection() const { return connection_; };
+	sqlite3_stmt* stmt()const { return stmt_; };
 
 	void Close();
-private:
-	~StatementRef();
-	friend class std::shared_ptr<StatementRef>;
 
+	~StatementImpl();
+
+private:
 
 	sqlite3_stmt* stmt_;
 	Connection * connection_;
 
-	DISABLE_COPY_AND_ASSIGN(StatementRef);
+	DISABLE_COPY_AND_ASSIGN(StatementImpl)
 };
+
+typedef StatementImpl* StatementRef;
 
 class Statement {
 public:
 	Statement();
-	explicit Statement(StatementRef *ref);
+	explicit Statement(const StatementRef& ref);
 
 	void Clear();
 
-	bool is_valid() const { return ref_->is_valid() ;}
+	bool is_valid() const { return ref_->is_valid(); }
 
-	bool Successed() const { return successed_;};
+	bool Successed() const { return successed_; };
 
 	bool Run();
 
@@ -57,8 +59,10 @@ public:
 
 	void Reset(bool clear_bound_args);
 
-	ColType ColumnType(int col) const ;
-	ColType DeclaredColumnType(int col) const ;
+	const char* GetSQLStatement()const { return sqlite3_sql(ref_->stmt()); }
+
+	ColType ColumnType(int col) const;
+	ColType DeclaredColumnType(int col) const;
 
 	// bind values, 0 base index
 	bool BindNull(int col);
@@ -71,32 +75,32 @@ public:
 	bool BindBlob(int col, const void * blob, int size);
 
 	// get column count
-	int ColumnCount() const ;
+	int ColumnCount() const;
 
 	// get value , 0 base index
 	bool	ColumnBool(int col)const;
-	int		ColumnInt(int col) const ;
-	int64_t ColumnInt64(int col) const ;
-	double	ColumnDouble(int col) const ;
-	std::string	ColumnString(int col) const ;
+	int		ColumnInt(int col) const;
+	int64_t ColumnInt64(int col) const;
+	double	ColumnDouble(int col) const;
+	std::string	ColumnString(int col) const;
 
 	// blobs
-	const void* ColumnBlob(int col) const ;
+	const void* ColumnBlob(int col) const;
 	int		ColumnByteLength(int col) const;
-	bool	ColumnBlobAsString(int col, std::string* o_res) const ;
-	bool	ColumnBlobAsVector(int col, std::vector<char>* o_res) const ;
+	bool	ColumnBlobAsString(int col, std::string* o_res) const;
+	bool	ColumnBlobAsVector(int col, std::vector<char>* o_res) const;
 	bool	ColumnBlobAsVector(int col,
-	                           std::vector<unsigned char>* o_res) const ;
+													 std::vector<unsigned char>* o_res) const;
 
 private:
 
 	// use for step and run
-	int CheckStepError(int error) ;
+	int CheckStepError(int error);
 
 	// use for bind
-	bool CheckBindOk(int error) const ;
+	bool CheckBindOk(int error) const;
 
-	std::shared_ptr<StatementRef> ref_;
+	StatementRef ref_;
 	bool steped_;
 	bool successed_;
 

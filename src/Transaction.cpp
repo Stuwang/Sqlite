@@ -23,8 +23,8 @@ bool Transaction::Begin() {
 
 bool Transaction::Commit() {
 	DCHECK(is_open_);
-	is_open_ = connection_->CommitTransaction();
-	return !is_open_;
+	is_open_ = false;
+	return connection_->CommitTransaction();
 }
 
 void Transaction::Rollback() {

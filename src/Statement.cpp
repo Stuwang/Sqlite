@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstring>
 
 #include "Statement.h"
@@ -6,7 +7,7 @@
 
 namespace sql {
 
-StatementRef::StatementRef(Connection* conn,
+StatementImpl::StatementImpl(Connection* conn,
                            sqlite3_stmt* stmt)
     : stmt_(stmt)
     , connection_(conn)
@@ -17,7 +18,7 @@ StatementRef::StatementRef(Connection* conn,
 
 }
 
-void StatementRef::Close() {
+void StatementImpl::Close() {
     if (stmt_) {
         sqlite3_finalize(stmt_);
         stmt_ = nullptr;
@@ -25,7 +26,7 @@ void StatementRef::Close() {
     connection_ = nullptr;
 }
 
-StatementRef::~StatementRef() {
+StatementImpl::~StatementImpl() {
     if (connection_) {
         connection_->StatementRefDelete(this);
     }
@@ -41,7 +42,7 @@ Statement::Statement()
 {
 }
 
-Statement::Statement(StatementRef *ref)
+Statement::Statement(const StatementRef& ref)
     : ref_(ref)
     , steped_(false)
     , successed_(false)
@@ -64,8 +65,9 @@ bool Statement::Step() {
 
 void Statement::Reset(bool clear_bound_args) {
 
-    if (clear_bound_args)
+    if (clear_bound_args){
         sqlite3_clear_bindings(ref_->stmt());
+		}
     const int rc = sqlite3_reset(ref_->stmt());
     if (rc == SQLITE_OK && ref_->connection()) {
 
@@ -229,8 +231,9 @@ int Statement::CheckStepError(int err) {
                   err == SQLITE_DONE);
     steped_ = true;
 
-    if (!successed_ && ref_.get() && ref_->connection() ) {
+    if (!successed_ && ref_ && ref_->connection() ) {
         // should report error to connection
+			std::cout << ( ref_->connection()->GetErrorMessage());
     }
     return err;
 };
