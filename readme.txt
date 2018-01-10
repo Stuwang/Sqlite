@@ -1,6 +1,8 @@
 小型的  Sqlite 库。
-这个库，最初的想法，是模仿（抄袭） Google Chrome Base 代码中 sql 部分。
-不过现在看来，完全没有必要。
-我觉得这个，现在自己可以简化一下 。做到便于使用。
 
-可能的话，可以很快集成在现有的项目中。哈哈。
+现有问题：
+
+Statement 和 Connection 之间的生命周期关系。
+Statement 的生命周期。
+添加MetaTable
+测试
