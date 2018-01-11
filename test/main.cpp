@@ -5,71 +5,91 @@
 #include "Statement.h"
 #include "Transaction.h"
 
-
 static const char* KCreateTable = "\
 CREATE TABLE student( \
-	id int PRIMARY KEY,\
-	name varchar(200),\
-	age int\
-);\
-";
-static const char* KInsertSql = "\
-INSERT INTO student(id,name, age) values(?, ? , ? )";
+ID int PRIMARY KEY,\
+name varchar(64),\
+age	int\
+)";
 
-static const char* KQuery = "select * from student;";
+static const char* KInsert = "\
+INSERT INTO student(ID,name,age) values( ? , ? , ? )";
 
-int main() {
+static const char* KQuery = "SELECT * FROM student;";
 
-	std::ios::sync_with_stdio(false);
-
+int main(int argc, char const *argv[])
+{
 	sql::Connection conn;
-	if (!conn.Open("a.db")) {
-		std::cout << "open error ";
+	if(!conn.OpenInMempry()){
+		std::cout << "error open :" << conn.GetErrorMessage();
 		return -1;
 	};
 
-	conn.IsSQLValid(KCreateTable);
-	conn.ExecuteAndReturnErrorCode(KCreateTable);
+	if(!conn.Execute(KCreateTable)){
+		std::cout << "error create table:" << conn.GetErrorMessage();
+		return -1;	
+	};
 
 	{
 		sql::Transaction trans(&conn);
+		if(!trans.Begin()){
+			std::cout << __LINE__ << " " << conn.GetErrorMessage() << std::endl;
+			return -1;
+		};
 
-		trans.Begin();
+		sql::Statement insert(conn.GetCachedStatement(SQL_FROM_HERE,KInsert));
 
-		sql::Statement statement(conn.GetCachedStatement(SQL_FROM_HERE, KInsertSql));
-
-		for (size_t i = 0; i < 10* 10000; i++) {
-			statement.BindInt(0, i);
-			statement.BindCString(1, "wangyuan");
-			statement.BindInt(2, 25);
-			if (!statement.Run()) {
-				break;
+		for (int i = 0; i < 500; ++i){
+			if(!insert.BindInt(0,i)){
+				std::cout << __LINE__ << " " << conn.GetErrorMessage() << i 
+				<<std::endl;
+				return -1;
 			};
-			statement.Reset(true);
+			
+			if(!insert.BindCString(1,"wangyuan")){
+				std::cout << conn.GetErrorMessage() << std::endl;	
+				return -1;
+			};
+
+			if(!insert.BindInt(2,23)){
+				std::cout << conn.GetErrorMessage() << std::endl;		
+				return -1;
+			};
+
+			if(!insert.Run()){
+				std::cout << "error " << std::endl;
+				break;
+			}
+
+			insert.Reset(true);
 		}
 
-		if (!trans.Commit()) {
+		if(!trans.Commit()){
+			std::cout << "commit error " << conn.GetErrorMessage();
 			trans.Rollback();
+			return -1;
 		};
 	}
+
 	{
+		sql::Statement query(conn.GetCachedStatement(SQL_FROM_HERE,KQuery));
+
 		std::fstream file;
 		file.open("a.txt", std::ios::app);
 
-		sql::Statement query(conn.GetUniqueStatement(KQuery));
-		std::cout << query.ColumnCount() << std::endl;
-		int count = 0;
-		while (query.Step()) {
-			count++;
-			file
-				<< "  id    :" << query.ColumnInt(0)
-				<< "  name  :" << query.ColumnString(1)
-				<< "  age   :" << query.ColumnInt(2)
+		while(query.Step()){
+			 std::cout 
+			//file
+				<< " id   :" << query.ColumnInt(0)
+				<< " name :" << query.ColumnString(1)
+				<< " age  :" << query.ColumnInt(2)
 				<< std::endl;
 		}
-		std::cout << "read rows :" << count << std::endl;
+
 		file.close();
 	}
+
+	conn.Close();
 
 	return 0;
 }

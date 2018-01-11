@@ -51,7 +51,7 @@ public:
 		this->error_cb_ = cb;
 	}
 	bool hasErrorCallback()const { return !!error_cb_; };
-	bool ResetErrorCallback() {
+	void ResetErrorCallback() {
 		error_cb_ = ErrorCallback();
 	}
 
