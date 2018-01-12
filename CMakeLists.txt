@@ -51,6 +51,9 @@ if(WIN32)
 	add_executable(run test/main.cpp)
 	target_link_libraries(run sql sqlite3)
 else(WIN32)
+	include_directories(
+		${CMAKE_CURRENT_SOURCE_DIR}/sqlite/include
+	)
 	link_directories(
 		${CMAKE_CURRENT_SOURCE_DIR}/sqlite/lib
 	)
