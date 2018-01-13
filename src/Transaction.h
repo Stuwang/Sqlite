@@ -19,13 +19,23 @@ public:
 
 	void Rollback();
 
-	bool is_open() const { return is_open_;};
+	bool is_open() const { return state_ == TRANSACTION_AFTER_BEGIN;}
 private:
 	Connection* connection_;
-	bool is_open_;
+
+	enum TransactionState{
+		TRANSACTION_INIT,
+		TRANSACTION_AFTER_BEGIN,
+		TRANSACTION_COMMIT_FAIL,
+		TRANSACTION_COMMIT_SUCCESS,
+		TRANSACTION_COMMIT_ROWBACK,
+	};
+
+	TransactionState state_;
 
 	DISABLE_COPY_AND_ASSIGN(Transaction);
 };
+
 }
 
 #endif

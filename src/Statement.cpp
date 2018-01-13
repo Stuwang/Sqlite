@@ -77,6 +77,11 @@ void Statement::Reset(bool clear_bound_args) {
     steped_ = false;
 }
 
+void Statement::ResetStatementRef(const StatementRef& ref){
+    Reset(true);
+    ref_ = ref;
+}
+
 ColType Statement::ColumnType(int col) const {
     return static_cast<ColType>(sqlite3_column_type(ref_->stmt(), col));
 }

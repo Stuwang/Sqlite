@@ -1,2 +1,5 @@
 sqlite/*
 build/*
+.vscode/
+sqlite-amalgamation-3210000.zip
+sqlite3/

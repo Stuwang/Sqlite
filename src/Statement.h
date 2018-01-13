@@ -59,6 +59,8 @@ public:
 
 	void Reset(bool clear_bound_args);
 
+	void ResetStatementRef(const StatementRef& ref);
+
 	const char* GetSQLStatement()const { return sqlite3_sql(ref_->stmt()); }
 
 	ColType ColumnType(int col) const;

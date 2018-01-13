@@ -5,8 +5,8 @@ cmake_minimum_required (VERSION 2.8)
 
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-	SET(CMAKE_CXX_COMPILER "clang++")
-	message(STATUS "COMPILER:clang++")
+	# SET(CMAKE_CXX_COMPILER "clang++")
+	# message(STATUS "COMPILER:clang++")
 
 	add_compile_options(-std=c++11)
 	message(STATUS "optional:-std=c++11")
@@ -40,6 +40,8 @@ src/Statement.cpp
 src/Statement.h
 src/Transaction.cpp
 src/Transaction.h
+src/MetaTable.cpp
+src/MetaTable.h
 )
 
 include_directories(src)

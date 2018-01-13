@@ -6,31 +6,40 @@ namespace sql {
 
 Transaction::Transaction(Connection* conn)
 	: connection_(conn)
-	, is_open_(false) {
+	, state_(TRANSACTION_INIT) {
 }
 
 Transaction::~Transaction() {
-	if (is_open_) {
+	if (state_ == TRANSACTION_COMMIT_FAIL) {
 		connection_->RollbackTransaction();
+		state_ = TRANSACTION_COMMIT_ROWBACK;
 	}
 }
 
 bool Transaction::Begin() {
-	DCHECK(!is_open_);
-	is_open_ = connection_->BeginTransaction();
-	return is_open_;
+	DCHECK(state_ == TRANSACTION_INIT);
+	if(connection_->BeginTransaction()){
+		state_ = TRANSACTION_AFTER_BEGIN;
+		return true;
+	};
+	return false;
 }
 
 bool Transaction::Commit() {
-	DCHECK(is_open_);
-	is_open_ = false;
-	return connection_->CommitTransaction();
+	DCHECK(state_ == TRANSACTION_AFTER_BEGIN);
+	if(connection_->CommitTransaction()){
+		state_ = TRANSACTION_COMMIT_SUCCESS;
+		return true;
+	}else{
+		state_ = TRANSACTION_COMMIT_FAIL;
+		return false;
+	}
 }
 
 void Transaction::Rollback() {
-	DCHECK(is_open_);
+	DCHECK(state_ == TRANSACTION_COMMIT_FAIL);
 	connection_->RollbackTransaction();
-	is_open_ = false;
+	state_ == TRANSACTION_COMMIT_ROWBACK;
 }
 
 }
