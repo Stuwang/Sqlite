@@ -64,14 +64,15 @@ bool Statement::Step() {
 }
 
 void Statement::Reset(bool clear_bound_args) {
+	  if(is_valid()){
+			if (clear_bound_args){
+					sqlite3_clear_bindings(ref_->stmt());
+			}
+			const int rc = sqlite3_reset(ref_->stmt());
+			if (rc == SQLITE_OK && ref_->connection()) {
 
-    if (clear_bound_args){
-        sqlite3_clear_bindings(ref_->stmt());
+			}
 		}
-    const int rc = sqlite3_reset(ref_->stmt());
-    if (rc == SQLITE_OK && ref_->connection()) {
-
-    }
 
     successed_ = false;
     steped_ = false;

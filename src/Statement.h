@@ -49,7 +49,7 @@ public:
 
 	void Clear();
 
-	bool is_valid() const { return ref_->is_valid(); }
+	bool is_valid() const { return ref_ && ref_->is_valid(); }
 
 	bool Successed() const { return successed_; };
 

@@ -4,6 +4,7 @@
 #include "Connection.h"
 #include "Statement.h"
 #include "Transaction.h"
+#include "MetaTable.h"
 
 static const char* KCreateTable = "\
 CREATE TABLE student( \
@@ -27,7 +28,7 @@ int main(int argc, char const *argv[])
 
 	if(!conn.Execute(KCreateTable)){
 		std::cout << "error create table:" << conn.GetErrorMessage();
-		return -1;	
+		return -1;
 	};
 
 	{
@@ -87,6 +88,41 @@ int main(int argc, char const *argv[])
 		}
 
 		file.close();
+	}
+
+	{
+		// meta table
+		sql::MetaTable meta;
+		if (!meta.Init(&conn)) {
+			std::cout << "create meta table error " << std::endl;
+		};
+		{
+			using DataType = int;
+			DataType data = 18;
+			meta.SetValue("age", data);
+			DataType o_data = 0;
+			meta.GetValue("age", &o_data);
+			std::cout << "get data " << o_data << std::endl;
+		}
+		{
+			using DataType = int64_t;
+			DataType data = 16;
+			meta.SetValue("age", data);
+			DataType o_data = 0;
+			meta.GetValue("age", &o_data);
+			std::cout << "get data " << o_data << std::endl;
+		}
+		{
+			using DataType = std::string;
+			DataType data = "123456";
+			meta.SetValue("age", data);
+			DataType o_data;
+			meta.GetValue("age", &o_data);
+			std::cout << "get data " << o_data << std::endl;
+		}
+		meta.DeleteKey("age");
+		
+
 	}
 
 	conn.Close();
