@@ -135,7 +135,7 @@ int main(int argc, char const *argv[])
 			meta.SetValue("age", data);
 
 			if (sql::ExecuteSql(&conn, "DELETE FROM meta WHERE key=?", "age")) {
-				std::cout << "É¾³ý³É¹¦" << std::endl;
+				std::cout << "delete ok" << std::endl;
 			}
 
 			DataType o_data;

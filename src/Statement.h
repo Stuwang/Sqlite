@@ -124,6 +124,10 @@ inline bool BindValue(Statement& statement, int index, const char* value)
 inline bool BindValue(Statement& statement, int index, const std::string& value)
 { return statement.BindString(index, value); }
 
+inline bool SqlBindHelper(Statement& statement, int index) {
+	return true;
+}
+
 template<class T,class ... Args>
 bool SqlBindHelper(Statement& statement, int index, T&& value,Args&& ... args) {
 	if (BindValue(statement, index, value)) {
@@ -132,10 +136,6 @@ bool SqlBindHelper(Statement& statement, int index, T&& value,Args&& ... args) {
 		statement.Reset(true);
 		return false;
 	}
-}
-
-inline bool SqlBindHelper(Statement& statement, int index) {
-	return true;
 }
 
 }
