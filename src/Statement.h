@@ -19,7 +19,7 @@ enum class ColType {
 	COLUMN_TYPE_NULL = SQLITE_NULL,
 };
 
-class StatementImpl{
+class StatementImpl {
 public:
 	StatementImpl(Connection* conn, sqlite3_stmt* stmt);
 
@@ -108,6 +108,42 @@ private:
 
 	DISABLE_COPY_AND_ASSIGN(Statement);
 };
+
+namespace internal{
+
+inline bool BindValue(Statement& statement, int index, bool value) 
+{ return statement.BindBool(index, value); }
+inline bool BindValue(Statement& statement, int index, int value)
+{ return statement.BindInt(index,value); }
+inline bool BindValue(Statement& statement, int index, int64_t value)
+{ return statement.BindInt64(index, value); }
+inline bool BindValue(Statement& statement, int index, double value)
+{ return statement.BindDouble(index, value); }
+inline bool BindValue(Statement& statement, int index, const char* value)
+{ return statement.BindCString(index, value); }
+inline bool BindValue(Statement& statement, int index, const std::string& value)
+{ return statement.BindString(index, value); }
+
+template<class T,class ... Args>
+bool SqlBindHelper(Statement& statement, int index, T&& value,Args&& ... args) {
+	if (BindValue(statement, index, value)) {
+		return SqlBindHelper(statement, index + 1, args...);
+	} else {
+		statement.Reset(true);
+		return false;
+	}
+}
+
+inline bool SqlBindHelper(Statement& statement, int index) {
+	return true;
+}
+
+}
+
+template<class ... Args>
+bool SqlBind(Statement& statement,Args&& ... args) {
+	return internal::SqlBindHelper(statement, 0, args...);
+}
 
 }
 

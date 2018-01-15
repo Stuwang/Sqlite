@@ -39,7 +39,7 @@ bool Transaction::Commit() {
 void Transaction::Rollback() {
 	DCHECK(state_ == TRANSACTION_COMMIT_FAIL);
 	connection_->RollbackTransaction();
-	state_ == TRANSACTION_COMMIT_ROWBACK;
+	state_ = TRANSACTION_COMMIT_ROWBACK;
 }
 
 }

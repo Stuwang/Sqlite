@@ -21,43 +21,60 @@ static const char* KQuery = "SELECT * FROM student;";
 int main(int argc, char const *argv[])
 {
 	sql::Connection conn;
-	if(!conn.OpenInMempry()){
+	if (!conn.OpenInMempry()) {
 		std::cout << "error open :" << conn.GetErrorMessage();
 		return -1;
 	};
 
-	if(!conn.Execute(KCreateTable)){
+	if (!conn.Execute(KCreateTable)) {
 		std::cout << "error create table:" << conn.GetErrorMessage();
 		return -1;
 	};
 
+	if (!sql::ExecuteSql(&conn, "DROP  TABLE  student")) {
+		std::cout << "error drop table:" << conn.GetErrorMessage();
+		return -1;
+	}
+
+	if (!sql::ExecuteSql(&conn, KCreateTable)) {
+		std::cout << "error create table:" << conn.GetErrorMessage();
+		return -1;
+	}
+
 	{
 		sql::Transaction trans(&conn);
-		if(!trans.Begin()){
+		if (!trans.Begin()) {
 			std::cout << __LINE__ << " " << conn.GetErrorMessage() << std::endl;
 			return -1;
 		};
 
-		sql::Statement insert(conn.GetCachedStatement(SQL_FROM_HERE,KInsert));
+		sql::Statement insert(conn.GetCachedStatement(SQL_FROM_HERE, KInsert));
 
-		for (int i = 0; i < 500; ++i){
-			if(!insert.BindInt(0,i)){
-				std::cout << __LINE__ << " " << conn.GetErrorMessage() << i 
-				<<std::endl;
-				return -1;
-			};
-			
-			if(!insert.BindCString(1,"wangyuan")){
-				std::cout << conn.GetErrorMessage() << std::endl;	
-				return -1;
-			};
+		for (int i = 0; i < 500; ++i) {
+			if (false) {
+				if (!insert.BindInt(0, i)) {
+					std::cout << __LINE__ << " " << conn.GetErrorMessage() << i
+						<< std::endl;
+					return -1;
+				};
 
-			if(!insert.BindInt(2,23)){
-				std::cout << conn.GetErrorMessage() << std::endl;		
-				return -1;
-			};
+				if (!insert.BindCString(1, "wangyuan")) {
+					std::cout << conn.GetErrorMessage() << std::endl;
+					return -1;
+				};
 
-			if(!insert.Run()){
+				if (!insert.BindInt(2, 23)) {
+					std::cout << conn.GetErrorMessage() << std::endl;
+					return -1;
+				};
+			} else {
+				if (!sql::SqlBind(insert, i, "wangyuan", 23)) {
+					std::cout << conn.GetErrorMessage() << std::endl;
+					return -1;
+				}
+			}
+
+			if (!insert.Run()) {
 				std::cout << "error " << std::endl;
 				break;
 			}
@@ -65,7 +82,7 @@ int main(int argc, char const *argv[])
 			insert.Reset(true);
 		}
 
-		if(!trans.Commit()){
+		if (!trans.Commit()) {
 			std::cout << "commit error " << conn.GetErrorMessage();
 			trans.Rollback();
 			return -1;
@@ -73,14 +90,14 @@ int main(int argc, char const *argv[])
 	}
 
 	{
-		sql::Statement query(conn.GetCachedStatement(SQL_FROM_HERE,KQuery));
+		sql::Statement query(conn.GetCachedStatement(SQL_FROM_HERE, KQuery));
 
 		std::fstream file;
 		file.open("a.txt", std::ios::app);
 
-		while(query.Step()){
-			 std::cout 
-			//file
+		while (query.Step()) {
+			std::cout
+				//file
 				<< " id   :" << query.ColumnInt(0)
 				<< " name :" << query.ColumnString(1)
 				<< " age  :" << query.ColumnInt(2)
@@ -116,12 +133,16 @@ int main(int argc, char const *argv[])
 			using DataType = std::string;
 			DataType data = "123456";
 			meta.SetValue("age", data);
+
+			if (sql::ExecuteSql(&conn, "DELETE FROM meta WHERE key=?", "age")) {
+				std::cout << "É¾³ý³É¹¦" << std::endl;
+			}
+
 			DataType o_data;
 			meta.GetValue("age", &o_data);
 			std::cout << "get data " << o_data << std::endl;
 		}
 		meta.DeleteKey("age");
-		
 
 	}
 

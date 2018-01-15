@@ -114,6 +114,22 @@ private:
 
 };
 
+namespace internal{
+
+}
+
+template<class ... Args>
+bool ExecuteSql(Connection * conn, const char* sql, Args&& ... args) {
+	Statement statement(conn->GetUniqueStatement(sql));
+	if (!statement.is_valid()) {
+		return false;
+	}
+	if (!SqlBind(statement, args...)) {
+		return false;
+	};
+	return statement.Run();
+}
+
 }
 
 #endif
