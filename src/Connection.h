@@ -1,135 +1,119 @@
 #ifndef SQL_CONNECTION_H__
 #define SQL_CONNECTION_H__
 
+#include <functional>
 #include <map>
 #include <set>
-#include <functional>
-#include "sql_define.h"
 #include "Statement.h"
+#include "sql_define.h"
 
 namespace sql {
 
 class StatementId {
-public:
-	StatementId(const char* file, int line)
-		: number_(line)
-		, str_(file)
-	{};
+ public:
+  StatementId(const char* file, int line) : number_(line), str_(file){};
 
-	explicit StatementId(const char* unique_name)
-		: number_(-1)
-		, str_(unique_name)
-	{};
+  explicit StatementId(const char* unique_name)
+      : number_(-1), str_(unique_name){};
 
-	bool operator<(const StatementId& right) const ;
+  bool operator<(const StatementId& right) const;
 
-private:
-	int number_;
-	const char* str_;
+ private:
+  int number_;
+  const char* str_;
 };
 
-#define SQL_FROM_HERE sql::StatementId(__FILE__,__LINE__)
+#define SQL_FROM_HERE sql::StatementId(__FILE__, __LINE__)
 
-class Connection
-{
-public:
+class Connection {
+ public:
+  typedef std::function<void(int, const char*, Statement*)> ErrorCallback;
 
-	typedef std::function<void(int, Statement*)> ErrorCallback;
+  Connection();
+  ~Connection();
 
-	Connection();
-	~Connection();
+  bool Open(const char* path);
 
-	bool Open(const char* path);
+  bool OpenInMempry();
 
-	bool OpenInMempry();
+  bool isOpen() const { return !!db_; };
 
-	bool isOpen() const { return !!db_;};
+  void Close();
 
-	void Close();
+  void SetErrorCallback(const ErrorCallback& cb) { this->error_cb_ = cb; }
+  bool hasErrorCallback() const { return !!error_cb_; };
+  void ResetErrorCallback() { error_cb_ = ErrorCallback(); }
 
-	void SetErrorCallback(const ErrorCallback& cb) {
-		this->error_cb_ = cb;
-	}
-	bool hasErrorCallback()const { return !!error_cb_; };
-	void ResetErrorCallback() {
-		error_cb_ = ErrorCallback();
-	}
+  bool BeginTransaction();
+  void RollbackTransaction();
+  bool CommitTransaction();
 
-	bool BeginTransaction();
-	void RollbackTransaction();
-	bool CommitTransaction();
+  bool Execute(const char* sql);
 
-	bool Execute(const char* sql);
+  int ExecuteAndReturnErrorCode(const char* sql);
 
-	int ExecuteAndReturnErrorCode(const char* sql);
+  StatementRef GetCachedStatement(const StatementId& id, const char* sql);
 
+  bool HasCachedStatement(const StatementId& id) const;
 
-	StatementRef GetCachedStatement(const StatementId& id,const char* sql);
+  StatementRef GetUniqueStatement(const char* sql);
 
-	bool HasCachedStatement(const StatementId& id) const;
+  bool IsSQLValid(const char* sql);
 
-	StatementRef GetUniqueStatement(const char* sql);
+  bool DoesTableExist(const char* table) const;
+  bool DoesIndexExist(const char* index) const;
 
-	bool IsSQLValid(const char* sql);
+  bool DoesColumnExist(const char* table, const char* column) const;
 
+  int GetErrorCode() const;
 
-	bool DoesTableExist(const char* table) const ;
-	bool DoesIndexExist(const char* index) const ;
+  const char* GetErrorMessage() const;
 
-	bool DoesColumnExist(const char* table, const char* column) const;
+ private:
+  friend class StatementImpl;
 
-	int GetErrorCode() const ;
+  void OnSqliteError(int, Statement*, const char*) const;
 
-	const char* GetErrorMessage() const ;
+  bool OpenInternal(const char* file_name);
+  void CloseInternal(bool forced);
 
-private:
+  StatementRef GetStatementImpl(sql::Connection* tracking_db,
+                                const char* sql) const;
+  StatementRef GetUnTrackedStatement(const char* sql) const {
+    return GetStatementImpl(NULL, sql);
+  };
 
-	friend class StatementImpl;
+  bool DoesTableOrIndexExist(const char* name, const char* item) const;
 
-	void OnSqliteError(int, Statement*, const char*)const;
+  void StatementRefCreate(const StatementRef& ref);
+  void StatementRefDelete(const StatementRef& ref);
 
-	bool OpenInternal(const char* file_name);
-	void CloseInternal(bool forced);
+  sqlite3* db_;
+  bool in_memory_;
 
-	StatementRef GetStatementImpl(sql::Connection* tracking_db, const char* sql)const;
-	StatementRef GetUnTrackedStatement(const char* sql)const {
-		return GetStatementImpl(NULL, sql);
-	};
+  ErrorCallback error_cb_;
 
-	bool DoesTableOrIndexExist(const char* name, const char* item) const;
+  typedef std::map<StatementId, StatementRef> CachedStatementMap;
+  CachedStatementMap statement_cahce_;
 
-	void StatementRefCreate(const StatementRef& ref);
-	void StatementRefDelete(const StatementRef& ref);
-
-	sqlite3 *db_;
-	bool in_memory_;
-
-	ErrorCallback error_cb_;
-
-	typedef std::map<StatementId, StatementRef> CachedStatementMap;
-	CachedStatementMap statement_cahce_;
-
-	typedef std::set<StatementRef> OpendStatementSet;
-	OpendStatementSet open_statement_;
-
+  typedef std::set<StatementRef> OpendStatementSet;
+  OpendStatementSet open_statement_;
 };
 
-namespace internal{
+namespace internal {}
 
+template <class... Args>
+bool ExecuteSql(Connection* conn, const char* sql, Args&&... args) {
+  Statement statement(conn->GetUniqueStatement(sql));
+  if (!statement.is_valid()) {
+    return false;
+  }
+  if (!SqlBind(statement, args...)) {
+    return false;
+  };
+  return statement.Run();
 }
 
-template<class ... Args>
-bool ExecuteSql(Connection * conn, const char* sql, Args&& ... args) {
-	Statement statement(conn->GetUniqueStatement(sql));
-	if (!statement.is_valid()) {
-		return false;
-	}
-	if (!SqlBind(statement, args...)) {
-		return false;
-	};
-	return statement.Run();
-}
-
-}
+}  // namespace sql
 
 #endif

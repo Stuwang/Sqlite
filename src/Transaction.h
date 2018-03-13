@@ -7,35 +7,35 @@ namespace sql {
 
 class Connection;
 
-class Transaction
-{
-public:
-	explicit Transaction(Connection* conn);
-	~Transaction();
+class Transaction {
+ public:
+  explicit Transaction(Connection* conn);
+  ~Transaction();
 
-	bool Begin();
+  bool Begin();
 
-	bool Commit();
+  bool Commit();
 
-	void Rollback();
+  void Rollback();
 
-	bool is_open() const { return state_ == TRANSACTION_AFTER_BEGIN;}
-private:
-	Connection* connection_;
+  bool is_open() const { return state_ == TRANSACTION_AFTER_BEGIN; }
 
-	enum TransactionState{
-		TRANSACTION_INIT,
-		TRANSACTION_AFTER_BEGIN,
-		TRANSACTION_COMMIT_FAIL,
-		TRANSACTION_COMMIT_SUCCESS,
-		TRANSACTION_COMMIT_ROWBACK,
-	};
+ private:
+  Connection* connection_;
 
-	TransactionState state_;
+  enum TransactionState {
+    TRANSACTION_INIT,
+    TRANSACTION_AFTER_BEGIN,
+    TRANSACTION_COMMIT_FAIL,
+    TRANSACTION_COMMIT_SUCCESS,
+    TRANSACTION_COMMIT_ROWBACK,
+  };
 
-	DISABLE_COPY_AND_ASSIGN(Transaction);
+  TransactionState state_;
+
+  DISABLE_COPY_AND_ASSIGN(Transaction);
 };
 
-}
+}  // namespace sql
 
 #endif
